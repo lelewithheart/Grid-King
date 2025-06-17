@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import re
 
 class RacingLeagueAPITester:
-    def __init__(self, base_url="http://localhost:80"):
+    def __init__(self, base_url="https://607ad625-0bbb-49f8-9a08-186d4609ed96.preview.emergentagent.com"):
         self.base_url = base_url
         self.session = requests.Session()
         self.tests_run = 0
