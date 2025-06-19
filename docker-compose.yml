@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # PHP/Apache Web Server
+  web:
+    build: .
+    container_name: racing_league_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./uploads:/var/www/html/uploads
+      - ./config:/var/www/html/config
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+    depends_on:
+      - db
+    networks:
+      - racing_network
+    restart: unless-stopped
+
+  # MariaDB Database
+  db:
+    image: mariadb:10.11
+    container_name: racing_league_db
+    environment:
+      MYSQL_ROOT_PASSWORD: racing_root_pass_2024
+      MYSQL_DATABASE: racing_league
+      MYSQL_USER: racing_user
+      MYSQL_PASSWORD: racing_pass123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database_setup.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./docker/init-sample-data.sql:/docker-entrypoint-initdb.d/02-sample-data.sql
+    networks:
+      - racing_network
+    restart: unless-stopped
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max_connections=200
+
+  # phpMyAdmin (Optional - for database management)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2
+    container_name: racing_league_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: racing_user
+      PMA_PASSWORD: racing_pass123
+      MYSQL_ROOT_PASSWORD: racing_root_pass_2024
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    networks:
+      - racing_network
+    restart: unless-stopped
+
+networks:
+  racing_network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
