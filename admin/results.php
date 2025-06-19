@@ -37,9 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_results'])) {
             // Insert new results
             $insertQuery = "
                 INSERT INTO race_results 
-                (race_id, driver_id, position, points, fastest_lap, pole_position, dnf, dnf_reason, time_penalty, points_penalty) 
+                (race_id, driver_id, attendance, position, points, fastest_lap, pole_position, dnf, dnf_reason, time_penalty, points_penalty) 
                 VALUES 
-                (:race_id, :driver_id, :position, :points, :fastest_lap, :pole_position, :dnf, :dnf_reason, :time_penalty, :points_penalty)
+                (:race_id, :driver_id, :attendance, :position, :points, :fastest_lap, :pole_position, :dnf, :dnf_reason, :time_penalty, :points_penalty)
             ";
             $insertStmt = $conn->prepare($insertQuery);
             
@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_results'])) {
                 if (empty($result['driver_id'])) continue;
                 
                 $driver_id = (int)$result['driver_id'];
+                $attendance = isset($result['attendance']) ? $result['attendance'] : 'Present';
                 $position = !empty($result['position']) ? (int)$result['position'] : null;
                 $dnf = isset($result['dnf']) ? 1 : 0;
                 $fastest_lap = isset($result['fastest_lap']) ? 1 : 0;
@@ -54,12 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_results'])) {
                 $dnf_reason = sanitizeInput($result['dnf_reason'] ?? '');
                 $time_penalty = (int)($result['time_penalty'] ?? 0);
                 $points_penalty = (int)($result['points_penalty'] ?? 0);
-                // Points are now entered by admin
                 $points = isset($result['points']) ? (int)$result['points'] : 0;
                 $points = max(0, $points - $points_penalty);
 
                 $insertStmt->bindParam(':race_id', $race_id);
                 $insertStmt->bindParam(':driver_id', $driver_id);
+                $insertStmt->bindParam(':attendance', $attendance);
                 $insertStmt->bindParam(':position', $position);
                 $insertStmt->bindParam(':points', $points);
                 $insertStmt->bindParam(':fastest_lap', $fastest_lap);
@@ -245,6 +246,14 @@ include '../includes/header.php';
                                     <!-- Pre-populate with existing results -->
                                     <?php foreach ($existingResults as $index => $result): ?>
                                         <div class="row driver-result mb-3 p-3 border rounded">
+                                            <div class="col-md-2">
+                                                <label class="form-label">Attendance</label>
+                                                <select class="form-select" name="results[<?php echo $index; ?>][attendance]">
+                                                    <option value="Present" <?php if (($result['attendance'] ?? 'Present') === 'Present') echo 'selected'; ?>>Present</option>
+                                                    <option value="Absent" <?php if (($result['attendance'] ?? '') === 'Absent') echo 'selected'; ?>>Absent</option>
+                                                    <option value="Excused" <?php if (($result['attendance'] ?? '') === 'Excused') echo 'selected'; ?>>Excused</option>
+                                                </select>
+                                            </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Driver</label>
                                                 <select class="form-select" name="results[<?php echo $index; ?>][driver_id]" required>
@@ -381,6 +390,14 @@ function addDriverRow() {
     const row = document.createElement('div');
     row.className = 'row driver-result mb-3 p-3 border rounded';
     row.innerHTML = `
+        <div class="col-md-2">
+            <label class="form-label">Attendance</label>
+            <select class="form-select" name="results[${driverRowIndex}][attendance]">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Excused">Excused</option>
+            </select>
+        </div>
         <div class="col-md-3">
             <label class="form-label">Driver</label>
             <select class="form-select" name="results[${driverRowIndex}][driver_id]" required>

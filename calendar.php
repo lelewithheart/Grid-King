@@ -11,6 +11,18 @@ $page_title = 'Race Calendar';
 $db = new Database();
 $conn = $db->getConnection();
 
+// Check if user is logged in
+$driverId = null;
+if (isset($_SESSION['user_id'])) {
+    $stmt = $conn->prepare("SELECT id FROM drivers WHERE user_id = :user_id");
+    $stmt->bindParam(':user_id', $_SESSION['user_id']);
+    $stmt->execute();
+    $driverRow = $stmt->fetch();
+    if ($driverRow) {
+        $driverId = $driverRow['id'];
+    }
+}
+
 // Get current season
 $seasonQuery = "SELECT * FROM seasons WHERE is_active = TRUE ORDER BY year DESC LIMIT 1";
 $seasonStmt = $conn->prepare($seasonQuery);
@@ -48,6 +60,16 @@ $races = $racesStmt->fetchAll();
 $upcomingRaces = array_filter($races, fn($r) => strtotime($r['race_date']) > time() && $r['status'] === 'Scheduled');
 $completedRaces = array_filter($races, fn($r) => $r['status'] === 'Completed');
 $currentRaces = array_filter($races, fn($r) => $r['status'] === 'In Progress');
+
+// check who is registered for each race
+
+$registeredRaceIds = [];
+if ($driverId) {
+    $regStmt = $conn->prepare("SELECT race_id FROM race_registrations WHERE driver_id = :driver_id");
+    $regStmt->bindParam(':driver_id', $driverId);
+    $regStmt->execute();
+    $registeredRaceIds = array_column($regStmt->fetchAll(), 'race_id');
+}
 
 include 'includes/header.php';
 ?>
@@ -220,9 +242,18 @@ include 'includes/header.php';
                                     </div>
                                     <?php if (isDriver()): ?>
                                         <div class="col">
-                                            <button class="btn btn-primary btn-sm w-100" onclick="registerForRace(<?php echo $race['id']; ?>)">
-                                                <i class="bi bi-plus-circle me-1"></i>Register
-                                            </button>
+                                            <?php if ($driverId): ?>
+                                            <?php if (in_array($race['id'], $registeredRaceIds)): ?>
+                                                <button class="btn btn-success btn-sm w-100" disabled>
+                                                    <i class="bi bi-check-circle me-1"></i>Registered
+                                                </button>
+                                            <?php else: ?>
+                                                <button class="btn btn-primary btn-sm w-100"
+                                                        onclick="registerForRace(<?php echo $race['id']; ?>, this)">
+                                                    <i class="bi bi-plus-circle me-1"></i>Register
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -340,16 +371,30 @@ function showSection(section) {
     }
 }
 
-function registerForRace(raceId) {
-    // This would typically be an AJAX call to register the driver
-    if (confirm('Register for this race?')) {
-        // For now, just show a message
-        alert('Race registration functionality would be implemented here');
-        // In a full implementation, this would:
-        // 1. Check if driver is already registered
-        // 2. Add driver to race_registrations table
-        // 3. Update the UI to show registration status
-    }
+function registerForRace(raceId, btn) {
+    if (!confirm('Register for this race?')) return;
+    btn.disabled = true;
+    fetch('register_for_race.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'race_id=' + encodeURIComponent(raceId)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+            btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Registered';
+            btn.disabled = true;
+        } else {
+            alert(data.message || 'Registration failed.');
+            btn.disabled = false;
+        }
+    })
+    .catch(() => {
+        alert('Registration failed.');
+        btn.disabled = false;
+    });
 }
 
 // Set initial section

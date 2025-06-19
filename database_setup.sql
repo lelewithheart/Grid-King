@@ -1,6 +1,8 @@
 -- Racing League Management System Database Schema
 -- Created for PHP 8.2 + MariaDB 10.11
 
+DROP DATABASE IF EXISTS racing_league;
+CREATE DATABASE racing_league;
 USE racing_league;
 
 -- Users table (authentication and roles)
@@ -74,6 +76,7 @@ CREATE TABLE race_results (
     id INT PRIMARY KEY AUTO_INCREMENT,
     race_id INT NOT NULL,
     driver_id INT NOT NULL,
+    attendance ENUM('Present','Absent','Excused') DEFAULT 'Present',
     position INT, -- NULL for DNF/DNS
     points INT DEFAULT 0,
     fastest_lap BOOLEAN DEFAULT FALSE,
@@ -87,6 +90,17 @@ CREATE TABLE race_results (
     FOREIGN KEY (race_id) REFERENCES races(id) ON DELETE CASCADE,
     FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE CASCADE,
     UNIQUE KEY unique_race_driver (race_id, driver_id)
+);
+
+-- Race Registrations table (for drivers to register/attend races)
+CREATE TABLE race_registrations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    race_id INT NOT NULL,
+    driver_id INT NOT NULL,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_race_driver (race_id, driver_id),
+    FOREIGN KEY (race_id) REFERENCES races(id) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE CASCADE
 );
 
 -- Penalties table (separate from race results for tracking)
@@ -144,6 +158,15 @@ CREATE INDEX idx_penalties_race_id ON penalties(race_id);
 -- Insert default data
 INSERT INTO users (username, email, password_hash, role, verified) VALUES 
 ('admin', 'admin@racingleague.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', TRUE);
+-- Sample drivers (linked to users and teams)
+INSERT INTO users (username, email, password_hash, role, verified) VALUES
+('driver1', 'driver1@racingleague.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'driver', TRUE),
+('driver2', 'driver2@racingleague.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'driver', TRUE);
+
+-- Insert drivers (user_id, team_id, driver_number, platform, country, livery_image, bio)
+INSERT INTO drivers (user_id, team_id, driver_number, platform, country, livery_image, bio) VALUES
+(2, 1, 44, 'PC', 'DE', NULL, 'Sample bio for driver 1'),
+(3, 1, 77, 'Xbox', 'GB', NULL, 'Sample bio for driver 2');
 
 -- Default season with standard F1-style points system
 INSERT INTO seasons (name, year, points_system, is_active) VALUES 

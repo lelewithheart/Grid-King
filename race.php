@@ -38,7 +38,7 @@ if (!$race) {
 
 $page_title = $race['name'];
 
-// Get race results
+// Get race results (now includes attendance)
 $resultsQuery = "
     SELECT 
         rr.*,
@@ -92,6 +92,11 @@ foreach ($results as $result) {
         $stats['pole_position_driver'] = $result['username'];
     }
 }
+
+$regStmt = $conn->prepare("SELECT COUNT(*) FROM race_registrations WHERE race_id = :race_id");
+$regStmt->bindParam(':race_id', $race_id);
+$regStmt->execute();
+$stats['total_participants'] = (int)$regStmt->fetchColumn();
 
 include 'includes/header.php';
 ?>
@@ -236,6 +241,7 @@ include 'includes/header.php';
                                 <th class="text-center">Points</th>
                                 <th class="text-center">Bonuses</th>
                                 <th class="text-center">Penalties</th>
+                                <th class="text-center">Attendance</th>
                                 <th class="text-center">Status</th>
                             </tr>
                         </thead>
@@ -315,6 +321,20 @@ include 'includes/header.php';
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <?php
+                                            $att = $result['attendance'] ?? 'Present';
+                                            if ($att === 'Present') {
+                                                echo '<span class="badge bg-success">Present</span>';
+                                            } elseif ($att === 'Absent') {
+                                                echo '<span class="badge bg-danger">Absent</span>';
+                                            } elseif ($att === 'Excused') {
+                                                echo '<span class="badge bg-warning text-dark">Excused</span>';
+                                            } else {
+                                                echo '<span class="badge bg-secondary">Unknown</span>';
+                                            }
+                                        ?>
                                     </td>
                                     <td class="text-center">
                                         <?php if ($result['dnf']): ?>
