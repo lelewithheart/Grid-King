@@ -16,16 +16,16 @@
 ## 🔧 Legacy 1.1 – League Customization & Branding
 
 ### 🔹 1.1.0 – Brand & Identity
-- [ ] Custom league name/logo/color
-- [ ] Editable league homepage text
-- [ ] League welcome screen / summary
+- [x] Custom league name/logo/color
+- [x] Editable league homepage text
+- [x] League welcome screen / summary
 
 ### 🔹 1.1.0a – Bugfixes ✅
 - [x] The logo's `href` is no longer relative – links from `/admin/` pages no longer break the site
 
 ### 🔹 1.1.0b – Bugfixes 🚧
-- [ ] Logo uploads (and general file uploads) work  
-- [ ] Editing entries without changing uploads no longer shows an error in the upload field
+- [x] Logo uploads (and general file uploads) work  
+- [x] Editing entries without changing uploads no longer shows an error in the upload field
 
 ### 🔹 1.1.1 – Flexible Points
 - [ ] Point system presets (F1, MotoGP, etc.)
