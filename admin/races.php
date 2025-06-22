@@ -244,8 +244,8 @@ include '../includes/header.php';
                         <div class="mb-3">
                             <label for="track_image" class="form-label">Track Image URL</label>
                             <input type="url" class="form-control" id="track_image" name="track_image" 
-                                   value="<?php echo $editRace ? htmlspecialchars($editRace['track_image']) : ''; ?>" 
-                                   placeholder="https://example.com/track.jpg">
+                                value="<?php echo $editRace ? htmlspecialchars($editRace['track_image'] ?? '') : ''; ?>" 
+                                placeholder="https://example.com/track.jpg">
                             <div class="form-text">Optional: URL to track image</div>
                         </div>
 

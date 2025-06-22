@@ -16,20 +16,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $theme_color = $_POST['theme_color'] ?? '#dc2626';
 
     // Handle logo upload
+    $errors = [];
     $logo_path = null;
     if (isset($_FILES['league_logo']) && $_FILES['league_logo']['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($_FILES['league_logo']['name'], PATHINFO_EXTENSION));
-        if (in_array($ext, ALLOWED_IMAGE_TYPES)) {
-            $target = UPLOAD_DIR . 'league_logo.' . $ext;
+        $target = UPLOAD_DIR . 'league_logo.' . $ext;
+
+        if (!in_array($ext, ALLOWED_IMAGE_TYPES)) {
+            $errors[] = 'Invalid logo file type.';
+        }
+        if (!is_dir(UPLOAD_DIR)) {
+            $errors[] = 'Target directory ' . realpath(UPLOAD_DIR) . ' not found';
+        }
+        // Optional: Check file size (e.g. max 2MB)
+        if ($_FILES['league_logo']['size'] > 2 * 1024 * 1024) {
+            $errors[] = 'Logo file is too large (max 2MB).';
+        }
+
+        if (count($errors) === 0) {
             if (move_uploaded_file($_FILES['league_logo']['tmp_name'], $target)) {
-                $logo_path = $target;
+                // Save only the relative path
+                $logo_path = 'uploads/league_logo.' . $ext;
             } else {
-                $error = 'Logo upload failed.';
+                $errors[] = 'Logo upload failed.';
             }
-        } else {
-            $error = 'Invalid logo file type.';
         }
     }
+
+if (!empty($errors)) {
+    $error = implode('<br>', $errors);
+}
 
     // Save settings
     $settings = [

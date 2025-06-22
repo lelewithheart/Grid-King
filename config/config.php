@@ -18,7 +18,7 @@ define('PASSWORD_HASH_ALGO', PASSWORD_DEFAULT);
 define('SESSION_TIMEOUT', 3600); // 1 hour
 
 // File upload settings
-define('UPLOAD_DIR', 'uploads/');
+define('UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/');
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
 define('ALLOWED_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif']);
 

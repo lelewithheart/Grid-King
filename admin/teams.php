@@ -112,7 +112,7 @@ include '../includes/header.php';
                     <input type="text" name="edit_name" class="form-control" value="<?php echo htmlspecialchars($editTeam['name']); ?>" required>
                 </div>
                 <div class="col-md-5">
-                    <input type="text" name="edit_logo" class="form-control" value="<?php echo htmlspecialchars($editTeam['logo']); ?>" placeholder="Logo URL (optional)">
+                    <input type="url" class="form-control" name="logo" value="<?php echo $editTeam ? htmlspecialchars($editTeam['logo'] ?? '') : ''; ?>" placeholder="https://example.com/logo.png">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" name="edit_team" class="btn btn-primary w-100">Save Changes</button>
