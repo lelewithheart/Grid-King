@@ -1,3 +1,21 @@
+<?php
+// Fetch settings for theme color
+if (!isset($settings)) {
+    $settings = [];
+    try {
+        $db = new Database();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("SELECT `key`, `value` FROM settings");
+        $stmt->execute();
+        foreach ($stmt->fetchAll() as $row) {
+            $settings[$row['key']] = $row['value'];
+        }
+    } catch (Exception $e) {
+        // fallback: use default color
+    }
+}
+$themeColor = $settings['theme_color'] ?? '#dc2626';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +32,7 @@
     
     <style>
         :root {
-            --racing-red: #dc2626;
+            --racing-red: <?php echo htmlspecialchars($themeColor); ?>;
             --racing-black: #1f2937;
             --racing-gold: #f59e0b;
         }
@@ -129,10 +147,9 @@
                                 <i class="bi bi-person-circle me-1"></i><?php echo $_SESSION['username']; ?>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="profile.php">Profile</a></li>
-                                <li><a class="dropdown-item" href="dashboard.php">Dashboard</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+                                <li><a class="dropdown-item" href="/profile.php">Profile</a></li>
+                                <li><a class="dropdown-item" href="/dashboard.php">Dashboard</a></li>
+                                <li><a class="dropdown-item" href="/logout.php">Logout</a></li>
                             </ul>
                         </li>
                     <?php else: ?>

@@ -12,6 +12,14 @@ $page_title = 'Home';
 $db = new Database();
 $conn = $db->getConnection();
 
+// Fetch league settings (name, logo, welcome text)
+$settings = [];
+$stmt = $conn->prepare("SELECT `key`, `value` FROM settings");
+$stmt->execute();
+foreach ($stmt->fetchAll() as $row) {
+    $settings[$row['key']] = $row['value'];
+}
+
 // Get current season
 $seasonQuery = "SELECT * FROM seasons WHERE is_active = TRUE ORDER BY year DESC LIMIT 1";
 $seasonStmt = $conn->prepare($seasonQuery);
@@ -19,15 +27,18 @@ $seasonStmt->execute();
 $currentSeason = $seasonStmt->fetch();
 
 // Get next race
-$nextRaceQuery = "
-    SELECT * FROM races 
-    WHERE season_id = :season_id AND race_date > NOW() AND status = 'Scheduled'
-    ORDER BY race_date ASC LIMIT 1
-";
-$nextRaceStmt = $conn->prepare($nextRaceQuery);
-$nextRaceStmt->bindParam(':season_id', $currentSeason['id']);
-$nextRaceStmt->execute();
-$nextRace = $nextRaceStmt->fetch();
+$nextRace = null;
+if ($currentSeason) {
+    $nextRaceQuery = "
+        SELECT * FROM races 
+        WHERE season_id = :season_id AND race_date > NOW() AND status = 'Scheduled'
+        ORDER BY race_date ASC LIMIT 1
+    ";
+    $nextRaceStmt = $conn->prepare($nextRaceQuery);
+    $nextRaceStmt->bindParam(':season_id', $currentSeason['id']);
+    $nextRaceStmt->execute();
+    $nextRace = $nextRaceStmt->fetch();
+}
 
 // Get recent news
 $newsQuery = "
@@ -49,18 +60,20 @@ if ($currentSeason) {
 }
 
 // Get recent race results
-$recentRaceQuery = "
-    SELECT r.*, COUNT(rr.id) as participants
-    FROM races r
-    LEFT JOIN race_results rr ON r.id = rr.race_id
-    WHERE r.season_id = :season_id AND r.status = 'Completed'
-    GROUP BY r.id
-    ORDER BY r.race_date DESC LIMIT 3
-";
-$recentRaceStmt = $conn->prepare($recentRaceQuery);
-$recentRaceStmt->bindParam(':season_id', $currentSeason['id']);
-$recentRaceStmt->execute();
-$recentRaces = $recentRaceStmt->fetchAll();
+$recentRaces = [];
+if ($currentSeason) {
+    $recentRaceQuery = "
+        SELECT r.*, 
+            (SELECT COUNT(*) FROM race_results rr WHERE rr.race_id = r.id AND rr.attendance = 'Present') as participants
+        FROM races r
+        WHERE r.season_id = :season_id AND r.status = 'Completed'
+        ORDER BY r.race_date DESC LIMIT 3
+    ";
+    $recentRaceStmt = $conn->prepare($recentRaceQuery);
+    $recentRaceStmt->bindParam(':season_id', $currentSeason['id']);
+    $recentRaceStmt->execute();
+    $recentRaces = $recentRaceStmt->fetchAll();
+}
 
 include 'includes/header.php';
 ?>
@@ -71,11 +84,14 @@ include 'includes/header.php';
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h1 class="display-4 fw-bold mb-3">
+                    <?php if (!empty($settings['league_logo'])): ?>
+                        <img src="<?php echo htmlspecialchars($settings['league_logo']); ?>" alt="League Logo" style="height:48px;vertical-align:middle;" class="me-2">
+                    <?php endif; ?>
                     <i class="bi bi-flag-checkered me-3"></i>
-                    Welcome to Racing League
+                    <?php echo htmlspecialchars($settings['league_name'] ?? 'Welcome to Racing League'); ?>
                 </h1>
                 <p class="lead mb-4">
-                    Professional sim racing championship management. Track standings, manage races, and follow your favorite drivers.
+                    <?php echo nl2br(htmlspecialchars($settings['welcome_text'] ?? 'Professional sim racing championship management. Track standings, manage races, and follow your favorite drivers.')); ?>
                 </p>
                 <?php if (!isLoggedIn()): ?>
                     <div class="d-flex gap-3">
