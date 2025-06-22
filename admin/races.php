@@ -64,6 +64,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_race'])) {
             
             $stmt->execute();
             $success = "Race {$action} successfully!";
+
+            // --- Move this block here ---
+            if (isset($_POST['sessions'])) {
+                $raceId = $race_id ?? $conn->lastInsertId();
+                // Remove old sessions
+                $conn->prepare("DELETE FROM race_sessions WHERE race_id = ?")->execute([$raceId]);
+                // Insert new sessions
+                foreach ($_POST['sessions'] as $sessionTypeId) {
+                    $stmtSession = $conn->prepare("INSERT INTO race_sessions (race_id, session_type_id, enabled) VALUES (?, ?, 1)");
+                    $stmtSession->execute([$raceId, $sessionTypeId]);
+                }
+            }
+            // --- End move ---
             
         } catch (Exception $e) {
             $error = 'Error saving race: ' . $e->getMessage();
@@ -134,6 +147,20 @@ if (isset($_GET['edit'])) {
     $editRace = $editStmt->fetch();
 }
 
+// Fetch all session types
+$sessionTypesStmt = $conn->prepare("SELECT * FROM session_types ORDER BY is_default DESC, name ASC");
+$sessionTypesStmt->execute();
+$sessionTypes = $sessionTypesStmt->fetchAll();
+
+// Fetch selected sessions for this race (if editing)
+$selectedSessions = [];
+if ($editRace) {
+    $raceSessionsStmt = $conn->prepare("SELECT session_type_id FROM race_sessions WHERE race_id = :race_id AND enabled = 1");
+    $raceSessionsStmt->bindParam(':race_id', $editRace['id']);
+    $raceSessionsStmt->execute();
+    $selectedSessions = array_column($raceSessionsStmt->fetchAll(), 'session_type_id');
+}
+
 include '../includes/header.php';
 ?>
 
@@ -195,6 +222,29 @@ include '../includes/header.php';
                             <input type="text" class="form-control" id="name" name="name" 
                                    value="<?php echo $editRace ? htmlspecialchars($editRace['name']) : ''; ?>" 
                                    placeholder="e.g., Season Opener" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Sessions in this Race</label>
+                            <div class="row">
+                                <?php foreach ($sessionTypes as $type): ?>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                name="sessions[]" value="<?php echo $type['id']; ?>"
+                                                id="session_<?php echo $type['id']; ?>"
+                                                <?php echo in_array($type['id'], $selectedSessions) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="session_<?php echo $type['id']; ?>">
+                                                <?php echo htmlspecialchars($type['name']); ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="mt-2">
+                                <input type="text" class="form-control d-inline w-auto" name="new_session_name" placeholder="New session name">
+                                <button type="submit" name="add_session_type" class="btn btn-outline-primary">Add Session</button>
+                            </div>
                         </div>
 
                         <div class="mb-3">

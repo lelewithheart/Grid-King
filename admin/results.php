@@ -17,6 +17,11 @@ $conn = $db->getConnection();
 $success = '';
 $error = '';
 
+$selectedRace = null;
+$existingResults = [];
+$sessions = [];
+$currentSessionId = null;
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_results'])) {
     $race_id = (int)$_POST['race_id'];
@@ -27,19 +32,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_results'])) {
     } else {
         try {
             $conn->beginTransaction();
+
+            // Insert new results
+            $race_session_id = (int)($_POST['race_session_id'] ?? 0);
             
             // Clear existing results for this race
-            $clearQuery = "DELETE FROM race_results WHERE race_id = :race_id";
+            $clearQuery = "DELETE FROM race_results WHERE race_id = :race_id AND race_session_id = :race_session_id";
             $clearStmt = $conn->prepare($clearQuery);
             $clearStmt->bindParam(':race_id', $race_id);
+            $clearStmt->bindParam(':race_session_id', $race_session_id);
             $clearStmt->execute();
             
-            // Insert new results
+            
+
             $insertQuery = "
                 INSERT INTO race_results 
-                (race_id, driver_id, attendance, position, points, fastest_lap, pole_position, dnf, dnf_reason, time_penalty, points_penalty) 
+                (race_id, race_session_id, driver_id, attendance, position, points, fastest_lap, pole_position, dnf, dnf_reason, time_penalty, points_penalty) 
                 VALUES 
-                (:race_id, :driver_id, :attendance, :position, :points, :fastest_lap, :pole_position, :dnf, :dnf_reason, :time_penalty, :points_penalty)
+                (:race_id, :race_session_id, :driver_id, :attendance, :position, :points, :fastest_lap, :pole_position, :dnf, :dnf_reason, :time_penalty, :points_penalty)
             ";
             $insertStmt = $conn->prepare($insertQuery);
             
@@ -58,7 +68,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_results'])) {
                 $points = isset($result['points']) ? (int)$result['points'] : 0;
                 $points = max(0, $points - $points_penalty);
 
+                // Calculate base points from position and session code
+                $points = 0;
+                if ($sessionCode && !empty($result['position'])) {
+                    $pos = (int)$result['position'];
+                    $points = $points_system[$sessionCode][$pos] ?? 0;
+                }
+
+                // Add bonus points
+                if (isset($points_system['bonus'])) {
+                    if (!empty($result['fastest_lap']) && isset($points_system['bonus']['fastest_lap'])) {
+                        $points += (int)$points_system['bonus']['fastest_lap'];
+                    }
+                    if (!empty($result['pole_position']) && isset($points_system['bonus']['pole'])) {
+                        $points += (int)$points_system['bonus']['pole'];
+                    }
+                    // Add more bonus types here if needed
+                }
+
+                // Subtract points penalty
+                $points = max(0, $points - $points_penalty);
+
                 $insertStmt->bindParam(':race_id', $race_id);
+                $insertStmt->bindParam(':race_session_id', $race_session_id);
                 $insertStmt->bindParam(':driver_id', $driver_id);
                 $insertStmt->bindParam(':attendance', $attendance);
                 $insertStmt->bindParam(':position', $position);
@@ -119,28 +151,70 @@ $selectedRace = null;
 $existingResults = [];
 if (isset($_GET['race_id'])) {
     $race_id = (int)$_GET['race_id'];
-    
+
+    // Fetch race
     $raceQuery = "SELECT * FROM races WHERE id = :id";
     $raceStmt = $conn->prepare($raceQuery);
     $raceStmt->bindParam(':id', $race_id);
     $raceStmt->execute();
     $selectedRace = $raceStmt->fetch();
-    
-    // Get existing results
-    $resultsQuery = "
-        SELECT rr.*, u.username, d.driver_number
-        FROM race_results rr
-        JOIN drivers d ON rr.driver_id = d.id
-        JOIN users u ON d.user_id = u.id
-        WHERE rr.race_id = :race_id
-        ORDER BY 
-            CASE WHEN rr.position IS NULL THEN 1 ELSE 0 END,
-            rr.position ASC
+
+    // Fetch enabled sessions for this race
+    $sessionsQuery = "
+        SELECT rs.id as race_session_id, st.name, st.code
+        FROM race_sessions rs
+        JOIN session_types st ON rs.session_type_id = st.id
+        WHERE rs.race_id = :race_id AND rs.enabled = 1
+        ORDER BY rs.session_order ASC, st.name ASC
     ";
-    $resultsStmt = $conn->prepare($resultsQuery);
-    $resultsStmt->bindParam(':race_id', $race_id);
-    $resultsStmt->execute();
-    $existingResults = $resultsStmt->fetchAll();
+    $sessionsStmt = $conn->prepare($sessionsQuery);
+    $sessionsStmt->bindParam(':race_id', $race_id);
+    $sessionsStmt->execute();
+    $sessions = $sessionsStmt->fetchAll();
+
+    // Determine current session (from GET or default to first)
+    $currentSessionId = $_GET['session'] ?? ($sessions[0]['race_session_id'] ?? null);
+
+    // Fetch existing results for this session
+    if ($currentSessionId) {
+        $resultsQuery = "
+            SELECT rr.*, u.username, d.driver_number
+            FROM race_results rr
+            JOIN drivers d ON rr.driver_id = d.id
+            JOIN users u ON d.user_id = u.id
+            WHERE rr.race_id = :race_id AND rr.race_session_id = :race_session_id
+            ORDER BY 
+                CASE WHEN rr.position IS NULL THEN 1 ELSE 0 END,
+                rr.position ASC
+        ";
+        $resultsStmt = $conn->prepare($resultsQuery);
+        $resultsStmt->bindParam(':race_id', $race_id);
+        $resultsStmt->bindParam(':race_session_id', $currentSessionId);
+        $resultsStmt->execute();
+        $existingResults = $resultsStmt->fetchAll();
+    }
+}
+
+// Fetch points system from settings
+$settingsQuery = $conn->prepare("SELECT `value` FROM settings WHERE `key` = 'points_system'");
+$settingsQuery->execute();
+$pointsSystemJson = $settingsQuery->fetchColumn();
+$points_system = $pointsSystemJson ? json_decode($pointsSystemJson, true) : [];
+
+// Get session code for this session
+$sessionCode = '';
+$activeSessionId = $race_session_id ?? $currentSessionId ?? null;
+if ($activeSessionId) {
+    $sessionCodeQuery = $conn->prepare("
+        SELECT st.code
+        FROM race_sessions rs
+        JOIN session_types st ON rs.session_type_id = st.id
+        WHERE rs.id = :race_session_id
+        LIMIT 1
+    ");
+    $sessionCodeQuery->bindParam(':race_session_id', $activeSessionId);
+    $sessionCodeQuery->execute();
+    $sessionCode = $sessionCodeQuery->fetchColumn();
 }
 
 include '../includes/header.php';
@@ -231,9 +305,28 @@ include '../includes/header.php';
 
         <!-- Results Input -->
         <div class="col-lg-8">
+            <div class="mb-3">
+                <label for="sessionSelect" class="form-label">Session</label>
+                <select id="sessionSelect" class="form-select" onchange="changeSession()">
+                    <?php foreach ($sessions as $session): ?>
+                        <option value="<?php echo $session['race_session_id']; ?>" <?php if ($currentSessionId == $session['race_session_id']) echo 'selected'; ?>>
+                            <?php echo htmlspecialchars($session['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <script>
+            function changeSession() {
+                const session = document.getElementById('sessionSelect').value;
+                const params = new URLSearchParams(window.location.search);
+                params.set('session', session);
+                window.location.search = params.toString();
+            }
+            </script>
             <?php if ($selectedRace): ?>
                 <form method="POST" action="" id="resultsForm">
                     <input type="hidden" name="race_id" value="<?php echo $selectedRace['id']; ?>">
+                    <input type="hidden" name="race_session_id" value="<?php echo htmlspecialchars($currentSessionId); ?>">
                     
                     <div class="card card-racing shadow-sm">
                         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
