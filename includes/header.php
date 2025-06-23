@@ -89,6 +89,54 @@ $themeColor = $settings['theme_color'] ?? '#dc2626';
             object-fit: cover;
             border-radius: 8px;
         }
+        
+        .sidebar {
+            background: #181c20;
+            min-height: 100vh;
+            border-right: 2px solid var(--racing-red);
+        }
+        .sidebar .nav-link {
+            font-size: 1.1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: background 0.2s;
+        }
+        .sidebar .nav-link.active, .sidebar .nav-link:hover {
+            background: var(--racing-red);
+            color: #fff !important;
+        }
+        
+        /* Sidebar overlay style */
+        #sidebarMenu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1040;
+            height: 100vh;
+            min-width: 220px;
+            background: #181c20;
+            border-right: 2px solid var(--racing-red);
+            overflow-y: auto;
+            transition: left 0.2s;
+        }
+        #sidebarMenu.active {
+            display: block;
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            z-index: 1039;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.3);
+        }
+        .sidebar-backdrop.active {
+            display: block;
+        }
+        
+        @media (max-width: 991px) {
+            #sidebarMenu { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -97,11 +145,9 @@ $themeColor = $settings['theme_color'] ?? '#dc2626';
             <a class="navbar-brand" href="/index.php">
                 <i class="bi bi-flag-checkered me-2"></i><?php echo APP_NAME; ?>
             </a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -125,7 +171,6 @@ $themeColor = $settings['theme_color'] ?? '#dc2626';
                         </li>
                     <?php endif; ?>
                 </ul>
-                
                 <ul class="navbar-nav">
                     <?php if (isLoggedIn()): ?>
                         <?php if (isAdmin()): ?>
@@ -164,3 +209,69 @@ $themeColor = $settings['theme_color'] ?? '#dc2626';
             </div>
         </div>
     </nav>
+
+    <!-- Sidebar Navigation (hidden by default, toggled only by JS if you want to add a custom button in the future) -->
+    <div class="d-flex">
+        <nav id="sidebarMenu" class="bg-dark sidebar px-3 py-4" style="min-width:220px; min-height:100vh; display:none;">
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" href="/index.php"><i class="bi bi-house me-2"></i>Home</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" href="/standings.php"><i class="bi bi-trophy me-2"></i>Standings</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" href="/calendar.php"><i class="bi bi-calendar-event me-2"></i>Calendar</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" href="/drivers.php"><i class="bi bi-people me-2"></i>Drivers</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" href="/teams.php"><i class="bi bi-shield me-2"></i>Teams</a>
+                </li>
+                <?php if (isLoggedIn()): ?>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white" href="/news.php"><i class="bi bi-newspaper me-2"></i>News</a>
+                    </li>
+                <?php endif; ?>
+                <?php if (isAdmin()): ?>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white" href="/admin/dashboard.php"><i class="bi bi-gear me-2"></i>Admin Panel</a>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+        <main class="flex-grow-1" style="padding:0;">
+            <script>
+const sidebar = document.getElementById('sidebarMenu');
+const toggleBtn = document.getElementById('sidebarToggle');
+const backdrop = document.getElementById('sidebarBackdrop');
+
+function openSidebar() {
+    sidebar.classList.add('active');
+    backdrop.classList.add('active');
+}
+function closeSidebar() {
+    sidebar.classList.remove('active');
+    backdrop.classList.remove('active');
+}
+toggleBtn.addEventListener('click', function() {
+    if (sidebar.classList.contains('active')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+});
+backdrop.addEventListener('click', closeSidebar);
+
+// Optional: close sidebar on resize to large screens
+window.addEventListener('resize', function() {
+    if (window.innerWidth >= 992) {
+        closeSidebar();
+    }
+});
+</script>
+<div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+<div class="container-fluid">
+    <!-- Your main content goes here -->
+</div>

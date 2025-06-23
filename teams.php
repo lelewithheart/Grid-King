@@ -76,8 +76,15 @@ include 'includes/header.php';
         </div>
     </div>
 
+    <!-- Team Search -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <input type="text" id="teamSearch" class="form-control" placeholder="Search teams by name or driver...">
+        </div>
+    </div>
+
     <!-- Teams Grid -->
-    <div class="row">
+    <div class="row" id="teamsGrid">
         <?php foreach ($teams as $team): ?>
             <div class="col-lg-6 mb-4">
                 <div class="card card-racing h-100 shadow-sm">
@@ -220,5 +227,15 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+document.getElementById('teamSearch').addEventListener('input', function() {
+    const filter = this.value.toLowerCase();
+    document.querySelectorAll('#teamsGrid .card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.parentElement.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>

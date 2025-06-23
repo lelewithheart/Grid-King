@@ -8,7 +8,7 @@
                 </div>
                 <div class="col-md-6 text-md-end">
                     <div class="social-links">
-                        <a href="#" class="text-light me-3"><i class="bi bi-discord"></i></a>
+                        <a href="https://discord.gg/PS5zMHBanV" class="text-light me-3"><i class="bi bi-discord"></i></a>
                         <a href="#" class="text-light me-3"><i class="bi bi-youtube"></i></a>
                         <a href="#" class="text-light"><i class="bi bi-twitch"></i></a>
                     </div>

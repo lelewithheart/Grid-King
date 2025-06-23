@@ -62,13 +62,22 @@ $completedRaces = array_filter($races, fn($r) => $r['status'] === 'Completed');
 $currentRaces = array_filter($races, fn($r) => $r['status'] === 'In Progress');
 
 // check who is registered for each race
-
 $registeredRaceIds = [];
 if ($driverId) {
     $regStmt = $conn->prepare("SELECT race_id FROM race_registrations WHERE driver_id = :driver_id");
     $regStmt->bindParam(':driver_id', $driverId);
     $regStmt->execute();
     $registeredRaceIds = array_column($regStmt->fetchAll(), 'race_id');
+}
+
+// Helper: group races by month
+function groupRacesByMonth($races) {
+    $grouped = [];
+    foreach ($races as $race) {
+        $month = date('F Y', strtotime($race['race_date']));
+        $grouped[$month][] = $race;
+    }
+    return $grouped;
 }
 
 include 'includes/header.php';
@@ -170,99 +179,100 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- Upcoming Races -->
+    <!-- Upcoming Races (Grouped by Month) -->
     <div id="upcoming-section">
         <h3 class="mb-4"><i class="bi bi-clock me-2"></i>Upcoming Races</h3>
-        
-        <?php if (!empty($upcomingRaces)): ?>
-            <div class="row">
-                <?php foreach ($upcomingRaces as $race): ?>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card card-racing h-100 shadow-sm">
-                            <?php if ($race['track_image']): ?>
-                                <img src="<?php echo htmlspecialchars($race['track_image']); ?>" 
-                                     class="card-img-top track-image" 
-                                     alt="<?php echo htmlspecialchars($race['track']); ?>">
-                            <?php endif; ?>
-                            
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0"><?php echo htmlspecialchars($race['name']); ?></h5>
-                                    <span class="badge bg-<?php 
-                                        echo match($race['format']) {
-                                            'Sprint' => 'warning',
-                                            'Feature' => 'primary', 
-                                            'Endurance' => 'info',
-                                            default => 'secondary'
-                                        };
-                                    ?>">
-                                        <?php echo htmlspecialchars($race['format']); ?>
-                                    </span>
+        <?php
+        $upcomingByMonth = groupRacesByMonth($upcomingRaces);
+        if (!empty($upcomingByMonth)):
+            foreach ($upcomingByMonth as $month => $racesInMonth): ?>
+                <h5 class="mt-4 mb-3 text-primary"><?= htmlspecialchars($month) ?></h5>
+                <div class="row">
+                    <?php foreach ($racesInMonth as $race): ?>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card card-racing h-100 shadow-sm">
+                                <?php if ($race['track_image']): ?>
+                                    <img src="<?php echo htmlspecialchars($race['track_image']); ?>" 
+                                         class="card-img-top track-image" 
+                                         alt="<?php echo htmlspecialchars($race['track']); ?>">
+                                <?php endif; ?>
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0"><?php echo htmlspecialchars($race['name']); ?></h5>
+                                        <span class="badge bg-<?php 
+                                            echo match($race['format']) {
+                                                'Sprint' => 'warning',
+                                                'Feature' => 'primary', 
+                                                'Endurance' => 'info',
+                                                default => 'secondary'
+                                            };
+                                        ?>">
+                                            <?php echo htmlspecialchars($race['format']); ?>
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <p class="mb-2">
-                                            <i class="bi bi-geo-alt text-muted me-1"></i>
-                                            <strong>Track:</strong> <?php echo htmlspecialchars($race['track']); ?>
-                                        </p>
-                                        <p class="mb-2">
-                                            <i class="bi bi-calendar text-muted me-1"></i>
-                                            <strong>Date:</strong> <?php echo formatDate($race['race_date']); ?>
-                                        </p>
-                                        <?php if ($race['laps']): ?>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
                                             <p class="mb-2">
-                                                <i class="bi bi-arrow-repeat text-muted me-1"></i>
-                                                <strong>Laps:</strong> <?php echo $race['laps']; ?>
+                                                <i class="bi bi-geo-alt text-muted me-1"></i>
+                                                <strong>Track:</strong> <?php echo htmlspecialchars($race['track']); ?>
                                             </p>
-                                        <?php endif; ?>
-                                        <p class="mb-0">
-                                            <i class="bi bi-people text-muted me-1"></i>
-                                            <strong>Registered:</strong> <?php echo $race['registered_drivers']; ?> drivers
-                                        </p>
-                                    </div>
-                                    <div class="col-md-4 text-center">
-                                        <div class="race-countdown" 
-                                             id="countdown-<?php echo $race['id']; ?>" 
-                                             data-countdown="<?php echo $race['race_date']; ?>">
+                                            <p class="mb-2">
+                                                <i class="bi bi-calendar text-muted me-1"></i>
+                                                <strong>Date:</strong> <?php echo formatDate($race['race_date']); ?>
+                                            </p>
+                                            <?php if ($race['laps']): ?>
+                                                <p class="mb-2">
+                                                    <i class="bi bi-arrow-repeat text-muted me-1"></i>
+                                                    <strong>Laps:</strong> <?php echo $race['laps']; ?>
+                                                </p>
+                                            <?php endif; ?>
+                                            <p class="mb-0">
+                                                <i class="bi bi-people text-muted me-1"></i>
+                                                <strong>Registered:</strong> <?php echo $race['registered_drivers']; ?> drivers
+                                            </p>
                                         </div>
-                                        <small class="text-muted d-block">Time Until Race</small>
+                                        <div class="col-md-4 text-center">
+                                            <div class="race-countdown" 
+                                                 id="countdown-<?php echo $race['id']; ?>" 
+                                                 data-countdown="<?php echo $race['race_date']; ?>">
+                                            </div>
+                                            <small class="text-muted d-block">Time Until Race</small>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="card-footer">
-                                <div class="row g-2">
-                                    <div class="col">
-                                        <a href="race.php?id=<?php echo $race['id']; ?>" class="btn btn-outline-primary btn-sm w-100">
-                                            <i class="bi bi-info-circle me-1"></i>Details
-                                        </a>
-                                    </div>
-                                    <?php if (isDriver()): ?>
+                                <div class="card-footer">
+                                    <div class="row g-2">
                                         <div class="col">
-                                            <?php if ($driverId): ?>
-                                            <?php if (in_array($race['id'], $registeredRaceIds)): ?>
-                                                <button class="btn btn-success btn-sm w-100" disabled>
-                                                    <i class="bi bi-check-circle me-1"></i>Registered
-                                                </button>
-                                            <?php else: ?>
-                                                <button class="btn btn-primary btn-sm w-100"
-                                                        onclick="registerForRace(<?php echo $race['id']; ?>, this)">
-                                                    <i class="bi bi-plus-circle me-1"></i>Register
-                                                </button>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
+                                            <a href="race.php?id=<?php echo $race['id']; ?>" class="btn btn-outline-primary btn-sm w-100">
+                                                <i class="bi bi-info-circle me-1"></i>Details
+                                            </a>
                                         </div>
-                                    <?php endif; ?>
+                                        <?php if (isDriver()): ?>
+                                            <div class="col">
+                                                <?php if ($driverId): ?>
+                                                <?php if (in_array($race['id'], $registeredRaceIds)): ?>
+                                                    <button class="btn btn-success btn-sm w-100" disabled>
+                                                        <i class="bi bi-check-circle me-1"></i>Registered
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button class="btn btn-primary btn-sm w-100"
+                                                            onclick="registerForRace(<?php echo $race['id']; ?>, this)">
+                                                        <i class="bi bi-plus-circle me-1"></i>Register
+                                                    </button>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
+                    <?php endforeach; ?>
+                </div>
+            <?php endforeach;
+        else: ?>
             <div class="text-center py-5">
                 <i class="bi bi-calendar-x display-1 text-muted"></i>
                 <h4 class="mt-3">No Upcoming Races</h4>
@@ -276,63 +286,65 @@ include 'includes/header.php';
         <?php endif; ?>
     </div>
 
-    <!-- Completed Races -->
+    <!-- Completed Races (Grouped by Month) -->
     <div id="completed-section" style="display: none;">
         <h3 class="mb-4"><i class="bi bi-check-circle me-2"></i>Completed Races</h3>
-        
-        <?php if (!empty($completedRaces)): ?>
-            <div class="row">
-                <?php foreach (array_reverse($completedRaces) as $race): ?>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card card-racing h-100 shadow-sm">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><?php echo htmlspecialchars($race['name']); ?></h5>
-                                <span class="badge bg-success">Completed</span>
-                            </div>
-                            
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <p class="mb-2">
-                                            <i class="bi bi-geo-alt text-muted me-1"></i>
-                                            <strong>Track:</strong> <?php echo htmlspecialchars($race['track']); ?>
-                                        </p>
-                                        <p class="mb-2">
-                                            <i class="bi bi-calendar text-muted me-1"></i>
-                                            <strong>Date:</strong> <?php echo formatDate($race['race_date']); ?>
-                                        </p>
-                                        <p class="mb-2">
-                                            <i class="bi bi-flag text-muted me-1"></i>
-                                            <strong>Format:</strong> <?php echo htmlspecialchars($race['format']); ?>
-                                        </p>
-                                        <?php if ($race['winner']): ?>
-                                            <p class="mb-0">
-                                                <i class="bi bi-trophy text-warning me-1"></i>
-                                                <strong>Winner:</strong> 
-                                                <span class="text-success fw-bold"><?php echo htmlspecialchars($race['winner']); ?></span>
+        <?php
+        $completedByMonth = groupRacesByMonth($completedRaces);
+        if (!empty($completedByMonth)):
+            foreach ($completedByMonth as $month => $racesInMonth): ?>
+                <h5 class="mt-4 mb-3 text-success"><?= htmlspecialchars($month) ?></h5>
+                <div class="row">
+                    <?php foreach ($racesInMonth as $race): ?>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card card-racing h-100 shadow-sm">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><?php echo htmlspecialchars($race['name']); ?></h5>
+                                    <span class="badge bg-success">Completed</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <p class="mb-2">
+                                                <i class="bi bi-geo-alt text-muted me-1"></i>
+                                                <strong>Track:</strong> <?php echo htmlspecialchars($race['track']); ?>
                                             </p>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="col-md-4 text-center">
-                                        <div class="text-muted">
-                                            <i class="bi bi-people display-4"></i>
-                                            <div class="fw-bold"><?php echo $race['registered_drivers']; ?></div>
-                                            <small>Participants</small>
+                                            <p class="mb-2">
+                                                <i class="bi bi-calendar text-muted me-1"></i>
+                                                <strong>Date:</strong> <?php echo formatDate($race['race_date']); ?>
+                                            </p>
+                                            <p class="mb-2">
+                                                <i class="bi bi-flag text-muted me-1"></i>
+                                                <strong>Format:</strong> <?php echo htmlspecialchars($race['format']); ?>
+                                            </p>
+                                            <?php if ($race['winner']): ?>
+                                                <p class="mb-0">
+                                                    <i class="bi bi-trophy text-warning me-1"></i>
+                                                    <strong>Winner:</strong> 
+                                                    <span class="text-success fw-bold"><?php echo htmlspecialchars($race['winner']); ?></span>
+                                                </p>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <div class="text-muted">
+                                                <i class="bi bi-people display-4"></i>
+                                                <div class="fw-bold"><?php echo $race['registered_drivers']; ?></div>
+                                                <small>Participants</small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="card-footer">
-                                <a href="race.php?id=<?php echo $race['id']; ?>" class="btn btn-outline-success w-100">
-                                    <i class="bi bi-trophy me-1"></i>View Results
-                                </a>
+                                <div class="card-footer">
+                                    <a href="race.php?id=<?php echo $race['id']; ?>" class="btn btn-outline-success w-100">
+                                        <i class="bi bi-trophy me-1"></i>View Results
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
+                    <?php endforeach; ?>
+                </div>
+            <?php endforeach;
+        else: ?>
             <div class="text-center py-5">
                 <i class="bi bi-calendar-check display-1 text-muted"></i>
                 <h4 class="mt-3">No Completed Races</h4>

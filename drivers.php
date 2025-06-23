@@ -1,6 +1,6 @@
 <?php
 /**
- * All Drivers Page - Complete driver listings with profiles
+ * All Drivers Page - Complete driver listings with profiles and live search
  */
 
 require_once 'config/config.php';
@@ -18,6 +18,7 @@ $driversQuery = "
         u.username,
         u.email,
         t.name as team_name,
+        t.id as team_id,
         COUNT(rr.id) as races_entered,
         SUM(rr.points) as total_points,
         COUNT(CASE WHEN rr.position = 1 THEN 1 END) as wins,
@@ -29,7 +30,7 @@ $driversQuery = "
     LEFT JOIN users u ON d.user_id = u.id
     LEFT JOIN teams t ON d.team_id = t.id
     LEFT JOIN race_results rr ON d.id = rr.driver_id
-    GROUP BY d.id, u.username, u.email, t.name
+    GROUP BY d.id, u.username, u.email, t.name, t.id
     ORDER BY total_points DESC, wins DESC, u.username ASC
 ";
 $driversStmt = $conn->prepare($driversQuery);
@@ -81,8 +82,15 @@ include 'includes/header.php';
         </div>
     </div>
 
+    <!-- Driver Search -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <input type="text" id="driverSearch" class="form-control" placeholder="Search drivers by name, number, team, or country...">
+        </div>
+    </div>
+
     <!-- Drivers Grid -->
-    <div class="row">
+    <div class="row" id="driversGrid">
         <?php foreach ($drivers as $index => $driver): ?>
             <?php 
             // Find current championship position
@@ -304,5 +312,15 @@ include 'includes/header.php';
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+document.getElementById('driverSearch').addEventListener('input', function() {
+    const filter = this.value.toLowerCase();
+    document.querySelectorAll('#driversGrid .card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.parentElement.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>
