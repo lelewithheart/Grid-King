@@ -28,9 +28,9 @@
 - [x] Editing entries without changing uploads no longer shows an error in the upload field
 
 ### 🔹 1.1.1 – Flexible Points
-- [ ] Point system presets (F1, MotoGP, etc.)
-- [ ] Per-session point control (Quali/Sprint/Race)
-- [ ] Bonus points config (Fastest Lap, Pole, etc.)
+- [x] Point system presets (F1, MotoGP, etc.)
+- [x] Per-session point control (Quali/Sprint/Race)
+- [x] Bonus points config (Fastest Lap, Pole, etc.)
 
 ### 🔹 1.1.2 – UI & Layout
 - [ ] Improved race calendar layout
