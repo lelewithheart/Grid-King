@@ -23,6 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $welcome_text = trim($_POST['welcome_text'] ?? '');
     $theme_color = $_POST['theme_color'] ?? '#dc2626';
     $points_system = $_POST['points_system'] ?? '';
+    $discord_webhook = trim($_POST['discord_webhook'] ?? '');
+
+    // Notification toggles
+    $notify_driver_register = isset($_POST['notify_driver_register']) ? '1' : '0';
+    $notify_race_result = isset($_POST['notify_race_result']) ? '1' : '0';
+    $notify_team_created = isset($_POST['notify_team_created']) ? '1' : '0';
+
     $errors = [];
     $logo_path = null;
 
@@ -59,7 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'league_name' => $league_name,
         'welcome_text' => $welcome_text,
         'theme_color' => $theme_color,
-        'points_system' => $points_system
+        'points_system' => $points_system,
+        'discord_webhook' => $discord_webhook,
+        'notify_driver_register' => $notify_driver_register,
+        'notify_race_result' => $notify_race_result,
+        'notify_team_created' => $notify_team_created
     ];
     if ($logo_path) {
         $settingsToSave['league_logo'] = $logo_path;
@@ -92,6 +103,12 @@ include '../includes/header.php';
     <?php elseif ($error): ?>
         <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
+    <div class="mb-4">
+        <a href="../utils/import_gklm.php" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> Import League Data (.gklm)
+        </a>
+        <small class="text-muted d-block mt-1">Restore league data from a .gklm or .gklm.enc backup file.</small>
+    </div>
     <form method="post" enctype="multipart/form-data" class="card card-body shadow-sm">
         <div class="mb-3">
             <label class="form-label">League Name</label>
@@ -131,8 +148,49 @@ include '../includes/header.php';
             <textarea name="points_system" id="points_system" class="form-control" rows="6"><?php echo htmlspecialchars($settings['points_system'] ?? ''); ?></textarea>
             <small class="text-muted">Example: {"main":{"1":25,"2":18,...},"sprint":{...},"bonus":{"fastest_lap":1,"pole":1}}</small>
         </div>
+        <div class="mb-3">
+            <label class="form-label">Discord Webhook URL</label>
+            <input type="url" name="discord_webhook" class="form-control" value="<?php echo htmlspecialchars($settings['discord_webhook'] ?? ''); ?>" placeholder="https://discord.com/api/webhooks/..." autocomplete="off">
+            <small class="text-muted">Paste your Discord webhook URL here to enable Discord notifications.</small>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Discord Notifications</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="notify_driver_register" id="notify_driver_register" value="1"
+                    <?php if (($settings['notify_driver_register'] ?? '1') === '1') echo 'checked'; ?>>
+                <label class="form-check-label" for="notify_driver_register">
+                    Notify on new driver registration
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="notify_race_result" id="notify_race_result" value="1"
+                    <?php if (($settings['notify_race_result'] ?? '1') === '1') echo 'checked'; ?>>
+                <label class="form-check-label" for="notify_race_result">
+                    Notify when race results are posted
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="notify_team_created" id="notify_team_created" value="1"
+                    <?php if (($settings['notify_team_created'] ?? '1') === '1') echo 'checked'; ?>>
+                <label class="form-check-label" for="notify_team_created">
+                    Notify when a new team is created
+                </label>
+            </div>
+            <small class="text-muted">Enable or disable Discord notifications for specific events.</small>
+        </div>
+        <div class="mb-3">
+        <a href="../utils/export_gklm.php" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-download"></i> Export League Data (.gklm)
+        </a>
+        <small class="text-muted d-block mt-1">Download a backup of all league data as a .gklm file.</small>
+    </div>
+
         <button type="submit" class="btn btn-primary">Save Settings</button>
     </form>
+
+    <!-- Export .gklm Button -->
+    
 </div>
 <script>
 const presets = <?php echo json_encode(array_map(fn($p) => $p['json'], $scoring_presets)); ?>;
