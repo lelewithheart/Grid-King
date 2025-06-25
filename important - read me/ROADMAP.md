@@ -33,9 +33,9 @@
 - [x] Bonus points config (Fastest Lap, Pole, etc.)
 
 ### 🔹 1.1.2 – UI & Layout
-- [ ] Improved race calendar layout
-- [ ] Driver/team list filtering & search
-- [ ] Sidebar/menu restructuring
+- [x] Improved race calendar layout
+- [x] Driver/team list filtering & search
+- [x] Sidebar/menu restructuring
 
 ---
 
