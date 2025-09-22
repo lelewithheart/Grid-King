@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Application settings
 define('APP_NAME', 'Grid King');
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '1.2.0');
 define('BASE_URL', 'http://localhost');
 
 // Security settings
@@ -18,9 +18,10 @@ define('PASSWORD_HASH_ALGO', PASSWORD_DEFAULT);
 define('SESSION_TIMEOUT', 3600); // 1 hour
 
 // File upload settings
-define('UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/');
+define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
-define('ALLOWED_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif']);
+define('ALLOWED_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+define('ALLOWED_MIME_TYPES', ['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
 // Include database configuration
 require_once 'database.php';
@@ -94,12 +95,76 @@ function calculateStandings($seasonId) {
 }
 
 function sendDiscordWebhook($webhookUrl, $message) {
+    if (empty($webhookUrl) || !filter_var($webhookUrl, FILTER_VALIDATE_URL)) {
+        return false;
+    }
+    
     $data = json_encode(["content" => $message]);
     $ch = curl_init($webhookUrl);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_exec($ch);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    
+    return $httpCode >= 200 && $httpCode < 300;
+}
+
+// Additional security functions
+function generateCSRFToken() {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function validateCSRFToken($token) {
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+function validateImageUpload($file) {
+    // Check if file was uploaded
+    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
+        return ['valid' => false, 'error' => 'File upload error'];
+    }
+    
+    // Check file size
+    if ($file['size'] > MAX_FILE_SIZE) {
+        return ['valid' => false, 'error' => 'File too large'];
+    }
+    
+    // Check file type
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+    
+    if (!in_array($mimeType, ALLOWED_MIME_TYPES)) {
+        return ['valid' => false, 'error' => 'Invalid file type'];
+    }
+    
+    // Check file extension
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($extension, ALLOWED_IMAGE_TYPES)) {
+        return ['valid' => false, 'error' => 'Invalid file extension'];
+    }
+    
+    return ['valid' => true];
+}
+
+function logError($message, $context = []) {
+    $logEntry = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'message' => $message,
+        'context' => $context,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+    ];
+    
+    error_log(json_encode($logEntry), 3, __DIR__ . '/../logs/app.log');
 }

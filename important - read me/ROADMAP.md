@@ -46,6 +46,17 @@
 - [x] Google Calendar sync
 - [x] Optional Discord bot for stat posting
 
+### 🔹 1.2.0a – Security & Robustness Bugfixes ✅
+- [x] Enhanced CSRF protection for admin forms
+- [x] Improved input validation and sanitization across all endpoints
+- [x] Discord integration error handling and robustness improvements
+- [x] API security enhancements with rate limiting and proper error responses
+- [x] Secure file upload validation and directory protection
+- [x] Discord bot security improvements with rate limiting and input validation
+- [x] Comprehensive error logging without exposing sensitive data
+- [x] Database query security with proper PDO parameter binding
+- [x] Enhanced configuration validation and secure defaults
+
 ### 🔹 1.2.1 – Exporting & Reporting
 - [ ] CSV/PDF export for results, standings, penalties
 - [ ] Export version tracking

@@ -1,20 +1,44 @@
 <?php
 /**
  * Standings API Endpoint
+ * Enhanced with security and error handling
  */
 
 requirePermission('standings');
 
-$db = new Database();
-$conn = $db->getConnection();
+try {
+    $db = new Database();
+    $conn = $db->getConnection();
+} catch (Exception $e) {
+    logError('Database connection failed in standings API', ['error' => $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode(['error' => 'Internal server error']);
+    exit();
+}
 
-// Get active season
+// Get active season with validation
 $seasonId = $_GET['season_id'] ?? null;
+if ($seasonId !== null) {
+    if (!is_numeric($seasonId) || intval($seasonId) <= 0) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid season ID']);
+        exit();
+    }
+    $seasonId = intval($seasonId);
+}
+
 if (!$seasonId) {
-    $stmt = $conn->prepare("SELECT id FROM seasons WHERE is_active = 1 LIMIT 1");
-    $stmt->execute();
-    $season = $stmt->fetch();
-    $seasonId = $season['id'] ?? 1;
+    try {
+        $stmt = $conn->prepare("SELECT id FROM seasons WHERE is_active = 1 LIMIT 1");
+        $stmt->execute();
+        $season = $stmt->fetch(PDO::FETCH_ASSOC);
+        $seasonId = $season['id'] ?? 1;
+    } catch (Exception $e) {
+        logError('Error fetching active season', ['error' => $e->getMessage()]);
+        http_response_code(500);
+        echo json_encode(['error' => 'Internal server error']);
+        exit();
+    }
 }
 
 if ($method === 'GET') {

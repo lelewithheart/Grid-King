@@ -18,20 +18,29 @@ $error = '';
 
 // Handle race creation/editing
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_race'])) {
-    $race_id = !empty($_POST['race_id']) ? (int)$_POST['race_id'] : null;
-    $season_id = (int)$_POST['season_id'];
-    $name = sanitizeInput($_POST['name']);
-    $track = sanitizeInput($_POST['track']);
-    $race_date = $_POST['race_date'];
-    $format = sanitizeInput($_POST['format']);
-    $laps = !empty($_POST['laps']) ? (int)$_POST['laps'] : null;
-    $status = sanitizeInput($_POST['status']);
-    $track_image = sanitizeInput($_POST['track_image']);
-    
-    if (empty($name) || empty($track) || empty($race_date) || empty($season_id)) {
-        $error = 'Please fill in all required fields.';
+    // CSRF Protection
+    if (!validateCSRF($_POST['csrf_token'] ?? '')) {
+        $error = 'Invalid request. Please try again.';
     } else {
-        try {
+        $race_id = !empty($_POST['race_id']) ? (int)$_POST['race_id'] : null;
+        $season_id = (int)$_POST['season_id'];
+        $name = sanitizeInput($_POST['name']);
+        $track = sanitizeInput($_POST['track']);
+        $race_date = $_POST['race_date'];
+        $format = sanitizeInput($_POST['format']);
+        $laps = !empty($_POST['laps']) ? (int)$_POST['laps'] : null;
+        $status = sanitizeInput($_POST['status']);
+        $track_image = sanitizeInput($_POST['track_image']);
+        
+        // Additional validation
+        if (empty($name) || empty($track) || empty($race_date) || empty($season_id)) {
+            $error = 'Please fill in all required fields.';
+        } elseif (strlen($name) > 255 || strlen($track) > 255) {
+            $error = 'Race name and track name must be under 255 characters.';
+        } elseif (!in_array($status, ['scheduled', 'completed', 'cancelled'])) {
+            $error = 'Invalid race status.';
+        } else {
+            try {
             if ($race_id) {
                 // Update existing race
                 $query = "
@@ -80,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_race'])) {
             
         } catch (Exception $e) {
             $error = 'Error saving race: ' . $e->getMessage();
+        }
         }
     }
 }
@@ -203,6 +213,7 @@ include '../includes/header.php';
                         <?php if ($editRace): ?>
                             <input type="hidden" name="race_id" value="<?php echo $editRace['id']; ?>">
                         <?php endif; ?>
+                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRF(); ?>">
                         
                         <div class="mb-3">
                             <label for="season_id" class="form-label">Season <span class="text-danger">*</span></label>
