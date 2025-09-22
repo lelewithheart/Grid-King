@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Application settings
 define('APP_NAME', 'Grid King');
-define('APP_VERSION', '1.2.0');
+define('APP_VERSION', '1.2.1');
 define('BASE_URL', 'http://localhost');
 
 // Security settings

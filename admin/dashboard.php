@@ -172,6 +172,15 @@ include '../includes/header.php';
                                 </div>
                             </a>
                         </div>
+                        <div class="col-md-6">
+                            <a href="/admin/exports.php" class="btn btn-outline-success w-100 d-flex align-items-center">
+                                <i class="bi bi-download me-2"></i>
+                                <div class="text-start">
+                                    <div class="fw-bold">Export Data</div>
+                                    <small>Download CSV reports and statistics</small>
+                                </div>
+                            </a>
+                        </div>
                     </div>
 
                     <hr class="my-4">

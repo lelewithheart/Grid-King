@@ -57,9 +57,15 @@
 - [x] Database query security with proper PDO parameter binding
 - [x] Enhanced configuration validation and secure defaults
 
-### 🔹 1.2.1 – Exporting & Reporting
-- [ ] CSV/PDF export for results, standings, penalties
-- [ ] Export version tracking
+### 🔹 1.2.1 – Exporting & Reporting ✅
+- [x] CSV/PDF export for results, standings, penalties
+- [x] Export version tracking
+- [x] Comprehensive export management system with rate limiting
+- [x] Secure file download with access control
+- [x] API endpoints for programmatic data export
+- [x] Export history and statistics tracking
+- [x] Automatic cleanup of expired exports
+- [x] Admin interface for export management
 
 ### 🔹 1.2.2 – Steward Logs
 - [ ] Race steward notes
