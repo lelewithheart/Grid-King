@@ -67,10 +67,19 @@
 - [x] Automatic cleanup of expired exports
 - [x] Admin interface for export management
 
-### 🔹 1.2.2 – Steward Logs
-- [ ] Race steward notes
-- [ ] Penalty log + justifications
-- [ ] Role-based permissions
+### 🔹 1.2.2 – Steward Logs & Race Management
+- [ ] Comprehensive steward note system for races
+- [ ] Detailed penalty logs with incident descriptions and justifications
+- [ ] Incident reporting with lap times and driver positions
+- [ ] Role-based permissions (Steward, Race Director, Administrator)
+- [ ] Steward decision history and appeal tracking
+- [ ] Race incident timeline with timestamps
+- [ ] Downloadable steward reports (PDF/CSV)
+- [ ] Integration with Discord for steward notifications
+- [ ] Photo/video evidence upload for incidents
+- [ ] Driver protest and appeal system
+- [ ] Steward committee voting on complex incidents
+- [ ] Race control dashboard for live race management
 
 ---
 
