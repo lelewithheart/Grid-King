@@ -1,4 +1,3 @@
-
 # 🛣️ SimRacing League Manager – Legacy Roadmap
 
 ## ✅ Legacy 1.0 – Initial Release
@@ -68,18 +67,18 @@
 - [x] Admin interface for export management
 
 ### 🔹 1.2.2 – Steward Logs & Race Management
-- [ ] Comprehensive steward note system for races
-- [ ] Detailed penalty logs with incident descriptions and justifications
-- [ ] Incident reporting with lap times and driver positions
-- [ ] Role-based permissions (Steward, Race Director, Administrator)
-- [ ] Steward decision history and appeal tracking
-- [ ] Race incident timeline with timestamps
-- [ ] Downloadable steward reports (PDF/CSV)
-- [ ] Integration with Discord for steward notifications
-- [ ] Photo/video evidence upload for incidents
-- [ ] Driver protest and appeal system
-- [ ] Steward committee voting on complex incidents
-- [ ] Race control dashboard for live race management
+- [x] Comprehensive steward note system for races
+- [x] Detailed penalty logs with incident descriptions and justifications
+- [x] Incident reporting with lap times and driver positions
+- [x] Role-based permissions (Steward, Race Director, Administrator)
+- [x] Steward decision history and appeal tracking
+- [x] Race incident timeline with timestamps
+- [x] Downloadable steward reports (PDF/CSV)
+- [x] Integration with Discord for steward notifications
+- [x] Photo/video evidence upload for incidents
+- [x] Driver protest and appeal system
+- [x] Steward committee voting on complex incidents
+- [x] Race control dashboard for live race management
 
 ---
 
@@ -129,4 +128,5 @@
 - [ ] Hosted import from Legacy exports
 - [ ] OAuth login (Discord, Google)
 - [ ] Public profiles & applications
+- [ ] League management UI
 - [ ] League management UI
