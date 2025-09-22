@@ -31,12 +31,19 @@ function isLoggedIn() {
     return isset($_SESSION['user_id']) && isset($_SESSION['username']);
 }
 
+
+// Neue rollenbasierte Permission-Checks
+function hasRole($role_code) {
+    if (!isLoggedIn() || !isset($_SESSION['user_roles'])) return false;
+    return in_array($role_code, $_SESSION['user_roles']);
+}
+
 function isAdmin() {
-    return isLoggedIn() && $_SESSION['role'] === 'admin';
+    return hasRole('admin');
 }
 
 function isDriver() {
-    return isLoggedIn() && $_SESSION['role'] === 'driver';
+    return hasRole('driver');
 }
 
 function requireLogin() {

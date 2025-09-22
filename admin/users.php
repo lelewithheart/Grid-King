@@ -14,7 +14,17 @@ $db = new Database();
 $conn = $db->getConnection();
 
 // Fetch all users
-$userQuery = "SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC";
+
+// Neue Rollenstruktur: User mit Rollen und Zuweisungen anzeigen
+$userQuery = "
+    SELECT u.id, u.username, u.email, u.created_at, 
+           GROUP_CONCAT(ur.role_code ORDER BY ur.role_code SEPARATOR ', ') AS roles
+    FROM users u
+    LEFT JOIN user_role_assignments ura ON ura.user_id = u.id AND ura.is_active = 1
+    LEFT JOIN user_roles ur ON ura.role_id = ur.id
+    GROUP BY u.id, u.username, u.email, u.created_at
+    ORDER BY u.created_at DESC
+";
 $userStmt = $conn->prepare($userQuery);
 $userStmt->execute();
 $users = $userStmt->fetchAll();
@@ -36,7 +46,7 @@ include '../includes/header.php';
                             <th>ID</th>
                             <th>Username</th>
                             <th>Email</th>
-                            <th>Role</th>
+                            <th>Roles</th>
                             <th>Joined</th>
                         </tr>
                     </thead>
@@ -47,7 +57,7 @@ include '../includes/header.php';
                             <td><?php echo htmlspecialchars($user['username']); ?></td>
                             <td><?php echo htmlspecialchars($user['email']); ?></td>
                             <td>
-                                <?php echo htmlspecialchars(ucfirst($user['role'])); ?>
+                                <?php echo htmlspecialchars($user['roles'] ? $user['roles'] : 'none'); ?>
                             </td>
                             <td><?php echo htmlspecialchars(date('Y-m-d', strtotime($user['created_at']))); ?></td>
                         </tr>

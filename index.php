@@ -4,6 +4,7 @@
  * Shows latest news, upcoming races, and current standings
  */
 
+session_start(); // Ensure session is started
 require_once 'config/config.php';
 
 $page_title = 'Home';
