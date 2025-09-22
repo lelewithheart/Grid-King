@@ -42,9 +42,9 @@
 ## 🔄 Legacy 1.2 – Automation & Tools
 
 ### 🔹 1.2.0 – Integrations
-- [ ] Discord webhook support
-- [ ] Google Calendar sync
-- [ ] Optional Discord bot for stat posting
+- [x] Discord webhook support
+- [x] Google Calendar sync
+- [x] Optional Discord bot for stat posting
 
 ### 🔹 1.2.1 – Exporting & Reporting
 - [ ] CSV/PDF export for results, standings, penalties
