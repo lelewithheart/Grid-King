@@ -218,6 +218,21 @@ include '../includes/header.php';
                                 <i class="bi bi-magic me-1"></i>Setup Wizard
                             </a>
                         </div>
+                        <div class="col-md-4">
+                            <a href="/admin/plugins.php" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="bi bi-puzzle me-1"></i>Plugins
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/admin/audit_log.php" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="bi bi-journal-text me-1"></i>Audit Log
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/admin/debug_panel.php" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="bi bi-bug me-1"></i>Debug Panel
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

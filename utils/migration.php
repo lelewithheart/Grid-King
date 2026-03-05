@@ -452,10 +452,21 @@ include '../includes/header.php';
 
 <div class="container my-5">
     <div class="d-flex align-items-center mb-4 gap-3">
-        <a href="settings.php" class="btn btn-outline-secondary btn-sm">
+        <a href="../admin/settings.php" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left"></i>
         </a>
         <h1 class="mb-0"><i class="bi bi-box-arrow-up me-2"></i>Migration &amp; Export</h1>
+        <span class="badge bg-info">Legacy 1.4.2</span>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="../admin/migration_sandbox.php" class="btn btn-outline-primary">
+            <i class="bi bi-box-seam me-1"></i>Migration Sandbox
+        </a>
+        <a href="../important - read me/EXPORT_FORMAT.md" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-book me-1"></i>Export Format Docs
+        </a>
     </div>
 
     <?php if ($success): ?>

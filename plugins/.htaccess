@@ -1,0 +1,11 @@
+# Deny direct access to plugin files
+<FilesMatch "\.php$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Allow access to assets only
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|woff|woff2|ttf|eot)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>

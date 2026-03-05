@@ -102,22 +102,22 @@
 
 ---
 
-## 🔩 Legacy 1.4 – Final Polish & LTS
+## ✅ Legacy 1.4 – Final Polish & LTS
 
 ### 🔹 1.4.0 – Plugin Support
-- [ ] Basic plugin loader
-- [ ] Plugin events/hooks
-- [ ] "Lite Mode" option
+- [x] Basic plugin loader
+- [x] Plugin events/hooks
+- [x] "Lite Mode" option
 
 ### 🔹 1.4.1 – Admin Tools
-- [ ] Audit log (admin actions)
-- [ ] Database cleanup / season reset
-- [ ] Debug panel
+- [x] Audit log (admin actions)
+- [x] Database cleanup / season reset
+- [x] Debug panel
 
 ### 🔹 1.4.2 – Final Migration Prep
-- [ ] Finalized export format & docs
-- [ ] Migration sandbox test
-- [ ] LTS patch release support
+- [x] Finalized export format & docs
+- [x] Migration sandbox test
+- [x] LTS patch release support
 
 ---
 

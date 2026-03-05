@@ -2,6 +2,25 @@
 
 A complete, professional racing league management system built with PHP 8.2, MariaDB, and Bootstrap 5. Perfect for sim racing leagues, racing clubs, and educational projects.
 
+**Current Version: 1.4.0 (Legacy LTS)**
+
+## 🆕 What's New in Version 1.4.0
+
+### Plugin System
+- **Plugin Loader** – Extend functionality with custom plugins
+- **Event Hooks** – Hook into application events to add features
+- **Lite Mode** – Disable plugins for better performance on limited servers
+
+### Admin Tools
+- **Audit Log** – Track all admin actions for accountability
+- **Database Cleanup** – Optimize database and manage seasons
+- **Debug Panel** – System diagnostics and troubleshooting
+
+### Migration Ready
+- **Migration Sandbox** – Test your data before migrating to v2.0
+- **Export Documentation** – Complete export format specification
+- **LTS Support** – Security patches until Q4 2026
+
 ## 🚀 Quick Start
 
 ### Prerequisites
