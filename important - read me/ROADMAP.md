@@ -85,20 +85,20 @@
 ## 🛠️ Legacy 1.3 – Settings & Migration
 
 ### 🔹 1.3.0 – Global Config & Setup
-- [ ] Setup wizard
-- [ ] Modular feature toggles (qualifying, fantasy mode)
-- [ ] League-wide defaults
+- [x] Setup wizard
+- [x] Modular feature toggles (qualifying, fantasy mode)
+- [x] League-wide defaults
 
 ### 🔹 1.3.1 – Appearance & Themes
-- [ ] Theme switcher (Dark/Light/Custom CSS)
-- [ ] Translation-ready (i18n)
-- [ ] Customizable announcement bar
+- [x] Theme switcher (Dark/Light/Custom CSS)
+- [x] Translation-ready (i18n)
+- [x] Customizable announcement bar
 
 ### 🔹 1.3.2 – Migration System
-- [ ] Export full league as `.zip` or `.json`
-- [ ] License & version metadata
-- [ ] Import preview for hosted system
-- [ ] Secure export tokens
+- [x] Export full league as `.zip` or `.json`
+- [x] License & version metadata
+- [x] Import preview for hosted system
+- [x] Secure export tokens
 
 ---
 

@@ -203,6 +203,21 @@ include '../includes/header.php';
                                 <i class="bi bi-gear me-1"></i>Settings
                             </a>
                         </div>
+                        <div class="col-md-4">
+                            <a href="/admin/feature_toggles.php" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="bi bi-toggles me-1"></i>Feature Toggles
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/utils/migration.php" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="bi bi-box-arrow-up me-1"></i>Migration
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/setup.php?reset=1" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="bi bi-magic me-1"></i>Setup Wizard
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

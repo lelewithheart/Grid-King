@@ -1,5 +1,5 @@
 <?php
-// Fetch settings for theme color
+// Fetch settings for theme color and appearance
 if (!isset($settings)) {
     $settings = [];
     try {
@@ -14,10 +14,23 @@ if (!isset($settings)) {
         // fallback: use default color
     }
 }
-$themeColor = $settings['theme_color'] ?? '#dc2626';
+$themeColor  = $settings['theme_color'] ?? '#dc2626';
+$themeMode   = $settings['theme_mode']  ?? 'light';
+// Resolve 'auto' to the browser-side: we emit a small JS snippet for that.
+$isDark      = ($themeMode === 'dark');
+$customCss   = $settings['custom_css'] ?? '';
+
+// Announcement bar
+$annEnabled     = ($settings['announcement_bar_enabled'] ?? '0') === '1';
+$annText        = $settings['announcement_bar_text']        ?? '';
+$annColor       = $settings['announcement_bar_color']       ?? '#0d6efd';
+$annDismissible = ($settings['announcement_bar_dismissible'] ?? '1') === '1';
+
+// Language
+$currentLang = $_SESSION['lang'] ?? ($settings['default_language'] ?? 'en');
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo htmlspecialchars($currentLang); ?>" data-bs-theme="<?php echo $themeMode === 'auto' ? 'light' : ($isDark ? 'dark' : 'light'); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,6 +42,17 @@ $themeColor = $settings['theme_color'] ?? '#dc2626';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Chart.js for statistics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <?php if ($themeMode === 'auto'): ?>
+    <script>
+        // Apply dark mode early to avoid flash of wrong theme
+        (function(){
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        })();
+    </script>
+    <?php endif; ?>
     
     <style>
         :root {
@@ -138,8 +162,33 @@ $themeColor = $settings['theme_color'] ?? '#dc2626';
             #sidebarMenu { display: none !important; }
         }
     </style>
+    <?php if (!empty($customCss)): ?>
+    <style id="custom-user-css">
+<?php echo $customCss; // Custom CSS is admin-controlled only – no user input ?>
+    </style>
+    <?php endif; ?>
 </head>
 <body>
+
+<?php if ($annEnabled && !empty($annText)): ?>
+<div id="announcementBar" class="py-2 px-3 text-white text-center fw-semibold"
+     style="background-color: <?php echo htmlspecialchars($annColor); ?>; position: relative;">
+    <?php echo htmlspecialchars($annText); ?>
+    <?php if ($annDismissible): ?>
+    <button type="button"
+            onclick="this.parentElement.style.display='none'; localStorage.setItem('ann_dismissed','1');"
+            style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;"
+            aria-label="Dismiss">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    <script>
+        if (localStorage.getItem('ann_dismissed') === '1') {
+            document.getElementById('announcementBar').style.display = 'none';
+        }
+    </script>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/index.php">
@@ -204,6 +253,28 @@ $themeColor = $settings['theme_color'] ?? '#dc2626';
                         <li class="nav-item">
                             <a class="nav-link" href="register.php"><i class="bi bi-person-plus me-1"></i>Register</a>
                         </li>
+                    <?php endif; ?>
+                    <!-- Language switcher -->
+                    <?php
+                    $availLangs = array_filter(array_map('trim', explode(',', $settings['available_languages'] ?? 'en')));
+                    $langLabels = ['en'=>'EN','de'=>'DE','fr'=>'FR','es'=>'ES','it'=>'IT','pt'=>'PT','nl'=>'NL','pl'=>'PL'];
+                    if (count($availLangs) > 1):
+                    ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-translate me-1"></i><?php echo htmlspecialchars(strtoupper($currentLang)); ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <?php foreach ($availLangs as $lc): ?>
+                                <li>
+                                    <a class="dropdown-item<?php echo $lc === $currentLang ? ' active' : ''; ?>"
+                                       href="?lang=<?php echo urlencode($lc); ?>">
+                                        <?php echo htmlspecialchars($langLabels[$lc] ?? strtoupper($lc)); ?>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </li>
                     <?php endif; ?>
                 </ul>
             </div>
