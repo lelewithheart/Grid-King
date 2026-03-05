@@ -1,0 +1,14 @@
+{
+    "name": "Example Plugin",
+    "version": "1.0.0",
+    "author": "GridKing Team",
+    "description": "A sample plugin demonstrating the GridKing plugin system. Safe to enable for testing.",
+    "requires": "1.4.0",
+    "hooks": [
+        "admin_dashboard_widgets",
+        "race_result_saved",
+        "plugins_loaded"
+    ],
+    "homepage": "https://github.com/lelewithheart/Grid-King",
+    "license": "MIT"
+}

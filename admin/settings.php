@@ -138,6 +138,9 @@ if (empty($languages)) {
         <a href="feature_toggles.php" class="btn btn-outline-secondary">
             <i class="bi bi-toggles me-1"></i>Feature Toggles
         </a>
+        <a href="plugins.php" class="btn btn-outline-secondary">
+            <i class="bi bi-puzzle me-1"></i>Plugins
+        </a>
         <a href="/setup.php?reset=1" class="btn btn-outline-secondary">
             <i class="bi bi-magic me-1"></i>Re-run Setup Wizard
         </a>
@@ -146,6 +149,9 @@ if (empty($languages)) {
         </a>
         <a href="../utils/migration.php" class="btn btn-outline-primary">
             <i class="bi bi-box-arrow-up me-1"></i> Migration &amp; Export
+        </a>
+        <a href="database_cleanup.php" class="btn btn-outline-warning">
+            <i class="bi bi-database-gear me-1"></i>Database Cleanup
         </a>
     </div>
 
